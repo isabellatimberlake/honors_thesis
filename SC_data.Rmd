@@ -1,0 +1,25 @@
+---
+title: "SC_data"
+output: html_document
+date: "2026-09-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+library(Seurat)
+library(tidyverse)
+library(DropletUtils)
+library(Matrix)
+library(data.table)
+setwd("/gpfs1/pi/kmccreer/scRNAseq/issy_26-27/issy_thesis")
+
+```
+
+```{r}
+# Read the dense matrix
+dt <- fread("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv")
+object <- CreatSeuratObject(dt, project = "thesis", assay = "RNA")
+
+ ```
