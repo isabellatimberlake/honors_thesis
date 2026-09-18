@@ -13,13 +13,48 @@ library(tidyverse)
 library(DropletUtils)
 library(Matrix)
 library(data.table)
-setwd("/gpfs1/pi/kmccreer/scRNAseq/issy_26-27/issy_thesis")
+
+setwd("/gpfs1/pi/kmccreer/scRNAseq/issy_26-27/honors_thesis")
 
 ```
 
 ```{r}
 # Read the dense matrix
-dt <- fread("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv")
-object <- CreatSeuratObject(dt, project = "thesis", assay = "RNA")
+dt <- fread("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv.gz")
+dt <- as.data.frame(dt)   
 
- ```
+# transposing matrix and formatting row names
+dt <- t(dt)
+rownames(dt) <- make.unique(rownames(dt))
+
+# creating Seurat object
+# need to decide on filtering parameters... look back at old work
+## min.cells will filter genes in less than x cells and min.features will filter cells with less than y genes expressed
+object <- CreateSeuratObject(dt, project = "thesis", assay = "RNA", min.cells = 3, min.features = 200, names.field = 1,
+  names.delim = "_", meta.data = NULL)
+
+object
+# use merge to combine my Seurat objects
+# going to need to loop through my list of files
+
+```
+
+
+```{r}
+# list of my files
+List_of_files =  c("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516663_MSK_LX661_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516664_MSK_LX666_METASTASIS_dense.csv.gz", "GSM3516665_MSK_LX675_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516666_MSK_LX675_NORMAL_dense.csv.gz", "GSM3516667_MSK_LX676_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516668_MSK_LX255B_METASTASIS_dense.csv.gz",  "GSM3516669_MSK_LX679_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516670_MSK_LX680_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516671_MSK_LX681_METASTASIS_dense.csv.gz", "GSM3516672_MSK_LX682_PRIMARY_TUMOUR_dense.csv.gz", "GSM3516673_MSK_LX682_NORMAL_dense.csv.gz",   "GSM3516674_MSK_LX684_PRIMARY_TUMOUR_dense.csv.gz",  "GSM3516675_MSK_LX684_NORMAL_dense.csv.gz",   "GSM3516676_MSK_LX685_NORMAL_dense.csv.gz", "GSM3516677_MSK_LX699_METASTASIS_dense.csv.gz",   "GSM3516678_MSK_LX701_METASTASIS_dense.csv.gz" )
+
+for (x in 1: length(List_of_files)){
+  currData <- List_of_files[x]
+  # Read the dense matrix
+  dt <- fread(currData)
+  dt <- as.data.frame(dt) 
+  # transposing matrix and formatting row names
+  dt <- t(dt)
+  rownames(dt) <- make.unique(rownames(dt))
+  CreateSeuratObject(dt, project = "thesis", assay = "RNA", min.cells = 3, min.features = 200, names.field = 1,
+  names.delim = "_", meta.data = NULL)
+}
+
+
+```
