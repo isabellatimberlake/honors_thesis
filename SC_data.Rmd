@@ -18,29 +18,6 @@ setwd("/gpfs1/pi/kmccreer/scRNAseq/issy_26-27/honors_thesis")
 
 ```
 
-```{r}
-'''
-Just one data object: 
-# Read the dense matrix
-dt <- fread("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv.gz")
-dt <- as.data.frame(dt)   
-
-# transposing matrix and formatting row names
-dt <- t(dt)
-rownames(dt) <- make.unique(rownames(dt))
-
-# creating Seurat object
-# need to decide on filtering parameters... look back at old work
-## min.cells will filter genes in less than x cells and min.features will filter cells with less than y genes expressed
-object <- CreateSeuratObject(dt, project = "thesis", assay = "RNA", min.cells = 3, min.features = 200, names.field = 1,
-  names.delim = "_", meta.data = NULL)
-
-object
-# use merge to combine my Seurat objects
-# going to need to loop through my list of files
-'''
-```
-
 
 ```{r}
 # list of my files
@@ -70,7 +47,7 @@ merged_object
 # View(merged_object@meta.data) to see the counts
 merged_object$sample <- rownames(merged_object@meta.data)
 View(merged_object@meta.data)
-head(merged_object@meta.data$sample)
+# head(merged_object@meta.data$sample)
 merged_object@meta.data <- separate(merged_object@meta.data, col = 'sample', into = c('barcode', 'MSK', 'LX653', 'Type', 'dense.cv.gz', 'cell', 'number'), sep = '_')
 
 library(stringr)
@@ -79,19 +56,16 @@ merged_object$sample <- rownames(merged_object@meta.data)
 merged_object@meta.data <- merged_object@meta.data |>
   mutate(sampleName = str_remove_all(sample, "GSM[0-9]+_MSK_|_dense\\.csv\\.gz"))
 
-# continue later on data visualization....
+## QC AND FILTERING
+merged_object$percent_mito <- PercentageFeatureSet(merged_object, pattern = '^MT-')
 
-merged_object@meta.data |>
-ggplot(aes(x=merged_object@meta.data$orig.indent, fill = merged_object@meta.data$orig.indent)) + 
-geom_bar(color="black") +
-stat_count(geom = "text", colour = "black", size = 3.5, 
-          aes(label = ..count..),
-        position=position_stack(vjust=0.5))+
-theme_classic() +
-theme(plot.title = element_text(hjust=0.5, face="bold")) +
-ggtitle("Number of Cells per Sample")
 
-# saveRDS(merged_object,"../merged_seurat_obj_allRNAsamples.rds")
+# filtering
+filtered_object <- subset(merged_object, subset = nCount_RNA > 800 & percent_mito < 20 )
+
+filtered_object
+# to save the object? -> 
+saveRDS(filtered_object,"merged_seurat_obj_allRNAsamples.rds")
 
 
 ```
