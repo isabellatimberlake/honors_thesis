@@ -19,6 +19,8 @@ setwd("/gpfs1/pi/kmccreer/scRNAseq/issy_26-27/honors_thesis")
 ```
 
 ```{r}
+'''
+Just one data object: 
 # Read the dense matrix
 dt <- fread("GSM3516662_MSK_LX653_PRIMARY_TUMOUR_dense.csv.gz")
 dt <- as.data.frame(dt)   
@@ -36,7 +38,7 @@ object <- CreateSeuratObject(dt, project = "thesis", assay = "RNA", min.cells = 
 object
 # use merge to combine my Seurat objects
 # going to need to loop through my list of files
-
+'''
 ```
 
 
@@ -65,7 +67,31 @@ merged_object
 ```
 
 ```{r}
+# View(merged_object@meta.data) to see the counts
+merged_object$sample <- rownames(merged_object@meta.data)
+View(merged_object@meta.data)
+head(merged_object@meta.data$sample)
+merged_object@meta.data <- separate(merged_object@meta.data, col = 'sample', into = c('barcode', 'MSK', 'LX653', 'Type', 'dense.cv.gz', 'cell', 'number'), sep = '_')
 
+library(stringr)
+merged_object$sample <- rownames(merged_object@meta.data)
+
+merged_object@meta.data <- merged_object@meta.data |>
+  mutate(sampleName = str_remove_all(sample, "GSM[0-9]+_MSK_|_dense\\.csv\\.gz"))
+
+# continue later on data visualization....
+
+merged_object@meta.data |>
+ggplot(aes(x=merged_object@meta.data$orig.indent, fill = merged_object@meta.data$orig.indent)) + 
+geom_bar(color="black") +
+stat_count(geom = "text", colour = "black", size = 3.5, 
+          aes(label = ..count..),
+        position=position_stack(vjust=0.5))+
+theme_classic() +
+theme(plot.title = element_text(hjust=0.5, face="bold")) +
+ggtitle("Number of Cells per Sample")
+
+# saveRDS(merged_object,"../merged_seurat_obj_allRNAsamples.rds")
 
 
 ```
